@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>UK Sports Coaches Dashboard</title>
+<style>
+:root {
+  --bg:#f4f7fb; --panel:#ffffff; --panel2:#f7f9fc; --text:#152033; --muted:#5b6b82;
+  --line:#d7deea; --accent:#2f6fed; --good:#0f9d6a; --warn:#c47a00; --chip:#eef2f8;
+  --shadow:0 8px 28px rgba(21,32,51,.08); --sticky:#f0f4fa;
+  --money-bg:rgba(15,157,106,.08); --money-text:#0b7a52;
+  --link:#1d5fd0; --detail-bg:#f6f8fc; --caption-bg:rgba(255,255,255,.97);
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:radial-gradient(1100px 520px at 8% -8%, #dce8ff 0%, transparent 55%),
+             radial-gradient(900px 480px at 100% 0%, #dff3ea 0%, transparent 45%),
+             var(--bg);
+  color:var(--text); min-height:100vh;
+}
+.wrap { max-width:1440px; margin:0 auto; padding:28px 20px 60px; }
+header { margin-bottom:18px; }
+h1 { margin:0 0 6px; font-size:1.7rem; letter-spacing:-.02em; }
+.sub { color:var(--muted); font-size:.84rem; max-width:none; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.badge { display:inline-flex; background:var(--chip); border:1px solid var(--line); color:var(--muted); font-size:.75rem; padding:6px 10px; border-radius:999px; margin-bottom:8px; }
+.notice { background:rgba(91,140,255,.12); border:1px solid rgba(91,140,255,.35); color:#cfe0ff; border-radius:12px; padding:10px 14px; margin-bottom:14px; font-size:.9rem; }
+.grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+@media (max-width:900px) { .grid { grid-template-columns:repeat(2,1fr); } }
+.card { background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--line); border-radius:16px; padding:16px 18px; box-shadow:var(--shadow); }
+.card .label { color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; }
+.card .value { font-size:1.45rem; font-weight:700; margin-top:6px; }
+.card .hint { color:var(--muted); font-size:.8rem; margin-top:4px; }
+.controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; align-items:center; }
+input[type=search], select { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:200px; outline:none; }
+.btn { background:var(--chip); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:10px 14px; cursor:pointer; }
+.btn:hover { border-color:var(--accent); }
+.table-wrap { background:var(--panel); border:1px solid var(--line); border-radius:18px; overflow:auto; box-shadow:var(--shadow); max-height:72vh; }
+table { width:100%; border-collapse:separate; border-spacing:0; min-width:1320px; }
+th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; font-size:.86rem; background:var(--panel); }
+th { position:sticky; top:0; z-index:3; background:var(--sticky); color:var(--muted); font-weight:600; cursor:pointer; user-select:none; white-space:nowrap; }
+th:hover { color:var(--text); }
+th .arrow { opacity:.45; margin-left:4px; font-size:.75rem; }
+th.active .arrow { opacity:1; color:var(--accent); }
+th.money, td.money { background:var(--money-bg); }
+th.money { color:var(--money-text); }
+th.sticky-1, td.sticky-1 { position:sticky; left:0; z-index:2; min-width:46px; }
+th.sticky-2, td.sticky-2 { position:sticky; left:46px; z-index:2; min-width:140px; box-shadow:4px 0 8px rgba(0,0,0,.15); }
+th.sticky-1, th.sticky-2 { z-index:4; background:var(--sticky); }
+td.sticky-1, td.sticky-2 { background:var(--panel); }
+tbody tr.main:hover td { background:rgba(47,111,237,.06); }
+tbody tr.main:hover td.sticky-1, tbody tr.main:hover td.sticky-2 { background:#eef3ff; }
+tbody tr.main:hover td.money { background:rgba(15,157,106,.14); }
+a { color:var(--link); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.pill { display:inline-block; padding:3px 9px; border-radius:999px; font-size:.72rem; font-weight:600; }
+.pill.v { background:rgba(15,157,106,.14); color:var(--good); }
+.pill.nv { background:rgba(196,122,0,.12); color:var(--warn); }
+.muted { color:var(--muted); }
+.num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.toggle { background:transparent; border:1px solid var(--line); color:var(--text); border-radius:8px; padding:4px 8px; cursor:pointer; font-size:.78rem; }
+.toggle:hover { border-color:var(--accent); }
+.toggle.open { border-color:var(--accent); background:rgba(47,111,237,.10); }
+.detail td { background:var(--detail-bg) !important; padding:0; }
+.detail-inner { padding:14px 16px 18px 62px; }
+.detail-inner h4 { margin:0 0 10px; font-size:.9rem; color:#1e3a6e; }
+.net { border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin:0 0 8px; background:#fff; }
+.net .name { font-weight:600; }
+.net .meta { color:var(--muted); font-size:.78rem; margin-top:2px; }
+.net .desc { margin-top:6px; font-size:.84rem; line-height:1.4; color:#31425c; }
+.empty { color:var(--muted); font-size:.88rem; }
+footer { margin-top:16px; color:var(--muted); font-size:.8rem; line-height:1.5; }
+.count { margin-left:auto; color:var(--muted); font-size:.85rem; }
+
+.btn-audio { display:inline-flex; align-items:center; gap:8px; background:#e8f0ff; border-color:#8eb0ff; color:#1a4db8; font-weight:600; }
+.btn-audio.playing { background:#e4f7ee; border-color:#6dcca3; color:#0b7a52; }
+.btn-audio .icon { font-size:1rem; line-height:1; }
+.btn-stop { display:none; align-items:center; gap:8px; background:#fdecec; border-color:#f0a0a0; color:#b42323; font-weight:600; }
+body.tour-active .btn-stop, .btn-stop.visible { display:inline-flex; }
+.btn-stop:hover { border-color:#e07070; }
+
+body.tour-active .tour-dimmable { transition: opacity .25s ease, filter .25s ease, box-shadow .25s ease; }
+body.tour-active .tour-dimmable:not(.tour-spotlight) { opacity:.28; filter:grayscale(.25); }
+body.tour-active .tour-spotlight {
+  opacity:1 !important; filter:none !important;
+  outline:2px solid rgba(47,111,237,.85);
+  outline-offset:4px;
+  box-shadow:0 0 0 6px rgba(47,111,237,.14), 0 10px 28px rgba(21,32,51,.12);
+  position:relative; z-index:20; border-radius:14px;
+  background:#fff;
+}
+body.tour-active th.tour-col-hot, body.tour-active td.tour-col-hot {
+  background:rgba(47,111,237,.14) !important;
+  box-shadow:inset 0 0 0 2px rgba(47,111,237,.65);
+}
+body.tour-active th.tour-col-hot.money, body.tour-active td.tour-col-hot.money {
+  background:rgba(15,157,106,.16) !important;
+  box-shadow:inset 0 0 0 2px rgba(15,157,106,.7);
+}
+.tour-caption {
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+  max-width:min(720px, calc(100vw - 32px));
+  background:var(--caption-bg); border:1px solid rgba(47,111,237,.35);
+  color:var(--text); padding:12px 16px; border-radius:14px;
+  box-shadow:0 12px 36px rgba(21,32,51,.16); z-index:1000; font-size:.92rem; line-height:1.4;
+  display:none; pointer-events:none;
+}
+body.tour-active .tour-caption { display:block; }
+.tour-caption .tour-step { color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.tour-caption strong { color:#1a4db8; }
+
+.title-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px 14px; margin:0 0 6px; }
+.title-row h1 { margin:0; }
+.title-row .btn-audio { padding:11px 16px; font-size:.95rem; }
+.title-row .btn-stop { padding:11px 16px; }
+.btn-export { display:inline-flex; align-items:center; gap:8px; background:#eef2f8; border-color:#c5d0e0; color:#243552; font-weight:600; }
+.btn-export:hover { border-color:var(--accent); color:var(--accent); }
+@media (max-width:900px) {
+  .sub { white-space:normal; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header id="tourHeader" class="tour-dimmable">
+    <div class="badge">UK coaches · research snapshot · 15 Oct 2026</div>
+    <div class="title-row">
+      <h1>UK Sports Coaches Dashboard</h1>
+      <button class="btn btn-audio" id="playGuide" type="button" aria-label="Play audio guide"><span class="icon" id="playGuideIcon">▶</span> <span id="playGuideLabel">Play audio guide</span></button>
+      <button class="btn btn-stop" id="stopGuide" type="button" aria-label="Stop audio guide"><span class="icon">■</span> Stop guide</button>
+      <audio id="guideAudio" preload="metadata" src="uk-coaches-dashboard-guide.mp3?v=alex-v4-1"></audio>
+    </div>
+    <p class="sub">Verified NGB stock vs unverified estimates · software &amp; revenue £ · independent networks outside each NGB (click Networks to expand).</p>
+  </header>
+
+
+  <div class="grid tour-dimmable" id="tourStats">
+    <div class="card"><div class="label">Sports</div><div class="value" id="statSports">—</div><div class="hint">In this table</div></div>
+    <div class="card"><div class="label">Verified sports</div><div class="value" id="statVerified">—</div><div class="hint">Published NGB stock</div></div>
+    <div class="card"><div class="label">Independent networks</div><div class="value">78</div><div class="hint">27 sports with ≥1 group</div></div>
+    <div class="card"><div class="label">ONS FT median</div><div class="value" style="font-size:1.25rem">£30,108</div><div class="hint">SOC 3432 coaches/instructors</div></div>
+  </div>
+
+  <div class="controls tour-dimmable" id="tourControls">
+    <input id="q" type="search" data-tour="search" placeholder="Search sport, association, network…"/>
+    <select id="status" data-tour="status">
+      <option value="all">All statuses</option>
+      <option value="Verified">Verified only</option>
+      <option value="Not verified">Not verified only</option>
+    </select>
+    <select id="netfilter" data-tour="netfilter">
+      <option value="all">All network counts</option>
+      <option value="has">Has independent networks</option>
+      <option value="none">No networks found</option>
+    </select>
+    <button class="btn" id="expandAll" data-tour="expand" type="button">Expand all networks</button>
+    <button class="btn" id="collapseAll" data-tour="collapse" type="button">Collapse all</button>
+    <button class="btn" id="reset" data-tour="reset" type="button">Reset</button>
+    <button class="btn btn-export" id="exportData" type="button" aria-label="Export dashboard data">↓ Export CSV</button>
+    <span class="count" id="shown">Showing 0</span>
+  </div>
+
+  <div class="table-wrap tour-dimmable" id="tourTable">
+    <table>
+      <thead>
+        <tr>
+          <th class="sticky-1" data-key="rank">Rank <span class="arrow">↕</span></th>
+          <th class="sticky-2" data-key="sport">Sport <span class="arrow">↕</span></th>
+          <th data-key="verified">Verified <span class="arrow">↕</span></th>
+          <th data-key="unverified">Unverified <span class="arrow">↕</span></th>
+          <th class="money" data-key="software_mid">Est. software £ / yr <span class="arrow">↕</span></th>
+          <th class="money" data-key="revenue_mid">Avg revenue / coach £ <span class="arrow">↕</span></th>
+          <th data-key="networks_count">Networks <span class="arrow">↕</span></th>
+          <th data-key="status">Status <span class="arrow">↕</span></th>
+          <th data-key="association">Association (NGB) <span class="arrow">↕</span></th>
+          <th data-key="contact">Contact <span class="arrow">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Verified = NGB licence/accreditation stock. Unverified = survey/membership proxies. Software &amp; revenue £ are estimates.
+    Networks = independent associations, franchises, marketplaces and cert bodies <em>outside</em> the listed NGB. Empty = no clear independent network found in this pass.
+    Local preview only — not published.
+  </footer>
+</div>
+<div class="tour-caption" id="tourCaption" aria-live="polite"><div class="tour-step" id="tourStepLabel"></div><div id="tourCaptionText"></div></div>
+
+<script>
+const DATA = [{"rank": 1, "sport": "Football", "verified": 140000, "verified_display": "140,000", "unverified": 540000, "unverified_display": "~540,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "FA Learning pathway, 2023", "association": "The FA", "url": "https://www.thefa.com/", "contact": "education@thefa.com", "software_low": 50, "software_high": 400, "software_display": "£50–£400", "revenue_low": 0, "revenue_high": 15000, "revenue_display": "£0–£15,000 (paid £8k–£35k)", "networks": [{"name": "League Coaches Association (LCA)", "url": "https://www.leaguecoaches.com/", "size": "Over 1,000 members (since 2023 launch)", "description": "Independent professional association for coaches, scouts, analysts and technical staff in men’s and women’s professional football (senior and academy) — legal/employment support, wellbeing and CPD; distinct from The FA and the League Managers Association."}, {"name": "British Football Coaches Network (BFCN)", "url": "https://www.britishfootballcoaches.com/", "size": "Size not published", "description": "Independent professional network and job board for football coaches worldwide — membership, overseas opportunities, networking and member exposure."}, {"name": "Soccer Stars Academy", "url": "https://soccerstarsacademy.co.uk/franchise-opportunities/", "size": "Operates in 100+ weekly locations (company claim); earlier reports ~17–22 franchise locations", "description": "UK children’s football coaching franchise — curriculum, training and territory model for franchisees delivering toddler-to-junior programmes outside FA club pathways."}, {"name": "Socatots / Brazilian Soccer Schools (UKCFDS)", "url": "https://socatots.co.uk/", "size": "90+ UK & Ireland Socatots locations listed; historic ~20 UK licences cited for BSS (2021)", "description": "Toddler football and Brazilian Soccer Schools franchise/licence network with coach accreditation via UKCFDS — commercial kids-coach pathway separate from The FA."}, {"name": "1TeamUK", "url": "https://www.1teamuk.com/", "size": "Early-stage community (low teens of coaches published on site when checked)", "description": "Free grassroots football coaching community — feed, resource library, coach directory and fixture requests; built independently of The FA."}], "networks_note": "UK Coaching is a cross-sport body (not football-only) and is omitted here; LCA is the strongest published-scale pro association.", "networks_count": 5}, {"rank": 2, "sport": "Athletics", "verified": 21000, "verified_display": "21,000+", "unverified": 330000, "unverified_display": "~330,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "coaches + leaders", "association": "England Athletics", "url": "https://www.englandathletics.org/", "contact": "enquiries@englandathletics.org", "software_low": 50, "software_high": 300, "software_display": "£50–£300", "revenue_low": 0, "revenue_high": 8000, "revenue_display": "£0–£8,000 (paid niche £15k–£40k)", "networks": [{"name": "British Athletics Coaches Association (BACA)", "url": "https://baca.uk.net/", "size": "Facebook group of 1,700+ UK coaches plus ~1,000 international experts (association claim); formal membership size not published", "description": "Independent non-profit representing UK athletics coaches (club, independent, salaried and self-employed) — advocacy, WhatsApp event groups and support outside the traditional club/NGB hierarchy."}, {"name": "European Athletics Coaches Association (EACA)", "url": "https://baca.uk.net/baca-and-eaca-coaches-charter/", "size": "Size not published", "description": "European coaches’ association linked with BACA via a shared Coaches’ Charter — continental peer network for track-and-field coaches (not England Athletics)."}], "networks_note": "", "networks_count": 2}, {"rank": 3, "sport": "Climbing / hillwalking", "verified": 9000, "verified_display": "~9,000", "unverified": 90000, "unverified_display": "~90,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "Mountain Training members", "association": "Mountain Training", "url": "https://www.mountain-training.org/", "contact": "info@mountain-training.org", "software_low": 100, "software_high": 500, "software_display": "£100–£500", "revenue_low": 18000, "revenue_high": 40000, "revenue_display": "£18,000–£40,000", "networks": [{"name": "Association of Mountaineering Instructors (AMI)", "url": "https://www.ami.org.uk/", "size": "Membership hit 1,000 (AMI history, 2019)", "description": "Professional association for Mountain Training MCI/WMCI holders in the UK & Ireland — find-an-instructor directory, CPD, insurance and public-facing quality mark; represents instructors as a membership body (quals from Mountain Training)."}, {"name": "British Association of International Mountain Leaders (BAIML)", "url": "https://baiml.org/", "size": "~500 members; 300+ fully qualified active UIMLA IMLs (association materials)", "description": "Professional membership body for UIMLA International Mountain Leaders in the UK & Ireland — standards, representation and professional community outside the BMC."}, {"name": "British Mountain Guides (BMG)", "url": "https://www.bmg.org.uk/", "size": "Size not published (IFMGA national guides association)", "description": "UK’s IFMGA mountain-guide association — training/standards and professional membership for alpine/mountain guides (distinct from BMC and Mountain Training walking/climbing schemes)."}, {"name": "Mountain Instructors Community (MIC)", "url": "https://www.themic.org.uk/", "size": "Size not published (WMCI holders only)", "description": "Collaboration/marketing board for independent WMCI-qualified climbing instructors — shared logo and voice to promote high-standard instruction."}], "networks_note": "Mountain Training Association (MTA) is the membership arm closely tied to Mountain Training awards and is treated as NGB-adjacent rather than listed as an independent alternative.", "networks_count": 4}, {"rank": 4, "sport": "Tennis", "verified": 7500, "verified_display": "~7,500", "unverified": 180000, "unverified_display": "~180,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "LTA Accredited", "association": "LTA", "url": "https://www.lta.org.uk/", "contact": "Coachingsupport@LTA.org.uk", "software_low": 300, "software_high": 1200, "software_display": "£300–£1,200", "revenue_low": 25000, "revenue_high": 55000, "revenue_display": "£25,000–£55,000", "networks": [{"name": "British Tennis Coaches Association (BTCA)", "url": "https://www.btca.org.uk/", "size": "Size not published (100+ years, independent)", "description": "Independent membership, insurance and National Conference for UK tennis coaches; accepts LTA/RPT/PTR quals alongside LTA."}, {"name": "PTR UK", "url": "https://www.ptruk.org/", "size": "13,000+ members worldwide (UK arm size not published)", "description": "UK arm of the global Professional Tennis Registry — tennis/padel/pickleball coach certification and membership."}, {"name": "RPT Europe", "url": "https://www.rpteurope.com/", "size": "Size not published", "description": "Independent European tennis coach registry and certification pathway."}, {"name": "inspire2Coach / Coach Central", "url": "https://inspire2coach.co.uk/coach-central/", "size": "Size not published", "description": "Commercial coach-education provider; official PTR UK training partner."}, {"name": "National Tennis", "url": "https://nationaltennis.org.uk/", "size": "109 venues, 398 courts, 20,000+ weekly players", "description": "Commercial multi-venue tennis operator that partners coaches for programmes."}, {"name": "Teddy Tennis", "url": "https://teddytennisfranchising.com/", "size": "50–60+ franchise partners worldwide", "description": "Early-years tennis coaching franchise (UK-founded)."}, {"name": "Tennis Tots", "url": "https://www.tennis-tots.co.uk/franchising/", "size": "Size not published", "description": "UK kids’ tennis coaching franchise."}], "networks_note": "", "networks_count": 7}, {"rank": 5, "sport": "Golf", "verified": 7000, "verified_display": "~7,000", "unverified": 60000, "unverified_display": "~60,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "derived PGA UK & Ireland", "association": "PGA", "url": "https://www.pga.info/", "contact": "coaching@pga.org.uk", "software_low": 300, "software_high": 1200, "software_display": "£300–£1,200", "revenue_low": 28000, "revenue_high": 50000, "revenue_display": "£28,000–£50,000", "networks": [{"name": "The PGA (GB & Ireland)", "url": "https://www.pga.info/", "size": "8,500+ members worldwide", "description": "Main professional association for club pros and coaches — not the NGB (England Golf)."}, {"name": "PGA Play", "url": "https://www.pgaplay.co.uk/about/", "size": "Listed-coach count not published", "description": "PGA’s find-a-lesson marketplace for booking coaches."}, {"name": "EGTF", "url": "https://www.egtf.co.uk/", "size": "Size not published", "description": "Independent teaching federation (explicitly not The PGA) with diploma courses and insurance."}, {"name": "WGTF GB & Ireland", "url": "https://www.wgtfgb.com/", "size": "500+ certified coaches worldwide", "description": "Independent golf coach certification, find-a-coach directory and franchise packages."}, {"name": "European Golf Coaches", "url": "https://europeangolfcoaches.com/join-us-uk-based/", "size": "Size not published", "description": "Membership network for UK-based golf coaches."}, {"name": "GolfStarz", "url": "https://golfstarz.co.uk/franchise-opportunities/", "size": "Size not published", "description": "Junior golf coaching franchise, UK-wide."}, {"name": "Golfa", "url": "https://golfa.co/", "size": "Size not published", "description": "Lesson-booking marketplace for golf coaches and academies."}, {"name": "Fairway Legends", "url": "https://fairway-legends.co.uk/pages/fl-franchise-model", "size": "Few named academies published", "description": "Academy/franchise app and tour network for PGA/TPI coaches."}], "networks_note": "", "networks_count": 8}, {"rank": 6, "sport": "Swimming", "verified": 6000, "verified_display": "almost 6,000", "unverified": 240000, "unverified_display": "~240,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "2022 register", "association": "Swim England", "url": "https://www.swimming.org/swimengland/", "contact": "coaching@swimming.org", "software_low": 200, "software_high": 800, "software_display": "£200–£800", "revenue_low": 15000, "revenue_high": 35000, "revenue_display": "£15,000–£35,000", "networks": [{"name": "British Swimming Coaches Association (BSCA)", "url": "https://gbswimcoaches.co.uk/", "size": "Size not published (est. 1965; describes itself as the only independent UK swim-coach body)", "description": "Independent coach/teacher association for club, school, university and professional swimming coaches — advocacy, regional/national support, wellbeing programme; founding member of IFSCA; liaises with but is not Swim England."}, {"name": "Swimming Teachers’ Association (STA)", "url": "https://www.sta.co.uk/", "size": "Size not published (major UK aquatic awarding/membership body)", "description": "National awarding and membership body for swimming teachers, lifeguards and aquatic professionals — insurance, Swim Star school programme and quals independent of Swim England."}, {"name": "Swimtime", "url": "https://www.swimtime.org/", "size": "~35 franchise territories / ~22 franchisees; lessons across hundreds of UK pools (company figures)", "description": "Largest independent UK swim-school franchise network — BFA-accredited franchisees employ teachers delivering lessons outside Swim England club programmes."}, {"name": "SwimShare", "url": "https://swimshare.co.uk/about", "size": "Size not published", "description": "Free independent community resource bank for swimming teachers — explicitly not affiliated with Swim England/ASA."}], "networks_note": "", "networks_count": 4}, {"rank": 7, "sport": "Basketball", "verified": 2168, "verified_display": "2,168", "unverified": 150000, "unverified_display": "~150,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "2024/25", "association": "Basketball England", "url": "https://www.basketballengland.co.uk/", "contact": "support@basketballengland.co.uk", "software_low": 30, "software_high": 200, "software_display": "£30–£200", "revenue_low": 0, "revenue_high": 12000, "revenue_display": "£0–£12,000 (paid £10k–£30k)", "networks": [{"name": "Magic Hoops", "url": "https://www.magichoops.co.uk/franchising/", "size": "Several named franchise locations (e.g. Basingstoke, Farnham, Feltham, Harrow, High Wycombe); wider count not published", "description": "UK children’s basketball coaching franchise — branded sessions and territory opportunities outside Basketball England club pathways."}, {"name": "Diddy Dunkers", "url": "https://diddydunkers.com/", "size": "Size not published (multi-venue sessions/camps in SE England)", "description": "Award-winning junior basketball coaching business with franchise-style growth — camps and weekly sessions independent of the NGB."}, {"name": "Basketball Coaches Association UK (BCA UK)", "url": "https://www.hoopsfix.com/2019/05/hoopsfix-all-star-classic-coaching-clinic-to-mark-relaunch-of-bca-uk/", "size": "Size not published (relaunch activity reported 2019; current activity unclear)", "description": "Historically relaunched independent basketball coaches membership/networking and clinic network — treat as secondary until current membership site is confirmed live."}], "networks_note": "London Basketball Association / GAMETIME are regional league/network operators rather than national coach associations.", "networks_count": 3}, {"rank": 8, "sport": "Equestrian", "verified": 2000, "verified_display": "2,000+", "unverified": 60000, "unverified_display": "~60,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "BHS Accredited", "association": "British Horse Society", "url": "https://www.bhs.org.uk/", "contact": "accreditedprofessionals@bhs.org.uk", "software_low": 200, "software_high": 800, "software_display": "£200–£800", "revenue_low": 20000, "revenue_high": 35000, "revenue_display": "£20,000–£35,000", "networks": [{"name": "Association of British Riding Schools (ABRS+)", "url": "https://www.abrs-info.org/", "size": "Hundreds of UK riding schools represented; ~120–214 ABRS+ approved establishments cited across directories", "description": "Independent UK body accrediting riding schools and offering instructor/coaching qualifications (including Equestrian Coaching Certificate) — alternative pathway and school network to BHS."}, {"name": "F&I Association (Fellows & Instructors of the BHS)", "url": "https://www.fandiassociation.org.uk/", "size": "Size not published", "description": "Peer CPD/membership association for senior BHS Fellows, Instructors and Performance Coach BHSI holders — study days and annual course; instructor community distinct from BHS as NGB though quals are BHS-based."}, {"name": "Equine Professionals Education Association (EPEA)", "url": "https://www.equine-professionals-education-association.co.uk/", "size": "Size not published", "description": "Independent professional-development association for equine careers including coaching/instruction pathways."}], "networks_note": "", "networks_count": 3}, {"rank": 9, "sport": "Archery", "verified": 1479, "verified_display": "1,479", "unverified": 120000, "unverified_display": "~120,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "2023–24", "association": "Archery GB", "url": "https://archerygb.org/", "contact": "enquiries@archerygb.org", "software_low": 10, "software_high": 100, "software_display": "£10–£100", "revenue_low": 0, "revenue_high": 5000, "revenue_display": "£0–£5,000", "networks": [], "networks_note": "No clear national independent coach association found beyond Archery GB. County coaching groups (e.g. Invicta/Kent, Hampshire HAA Coaching Group, Sussex Martlets Guild, Shropshire Coaching Group) exist but are typically AGB county-structure adjacent rather than true non-NGB alternatives.", "networks_count": 0}, {"rank": 10, "sport": "Weightlifting", "verified": 387, "verified_display": "387", "unverified": 150000, "unverified_display": "~150,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "2024–25", "association": "British Weight Lifting", "url": "https://britishweightlifting.org/", "contact": "enquiries@britishweightlifting.org", "software_low": 50, "software_high": 300, "software_display": "£50–£300", "revenue_low": 10000, "revenue_high": 35000, "revenue_display": "£10,000–£35,000", "networks": [{"name": "UK Strength & Conditioning Association (UKSCA)", "url": "https://www.uksca.org.uk/", "size": "Over 2,600 members including 1,000+ accredited S&C coaches/trainers (UKSCA About)", "description": "UK’s professional body for strength & conditioning practitioners — accreditation and membership independent of British Weight Lifting; highly relevant adjacent network for weightlifting/S&C coaches."}, {"name": "British Powerlifting", "url": "https://www.britishpowerlifting.org/coaching-courses/", "size": "Size not published (national powerlifting NGB with own coaching licence)", "description": "Separate national governing/awarding pathway for powerlifting coaches (Level 1/2 courses and coaching licence) — not British Weight Lifting’s Olympic weightlifting pathway."}], "networks_note": "British Powerlifting is itself an NGB for powerlifting, included here because the table sport is Weightlifting under BWL; powerlifting coaches sit on a parallel pathway.", "networks_count": 2}, {"rank": 11, "sport": "Orienteering", "verified": 350, "verified_display": "~350", "unverified": 90000, "unverified_display": "~90,000 (UK Coaching 2019)", "status": "Verified", "status_detail": "2023", "association": "British Orienteering", "url": "https://www.britishorienteering.org.uk/", "contact": "coachingadmin@britishorienteering.org.uk", "software_low": 0, "software_high": 50, "software_display": "£0–£50", "revenue_low": 0, "revenue_high": 2000, "revenue_display": "£0–£2,000", "networks": [], "networks_note": "No clear independent coach network, franchise or association found beyond British Orienteering. Individual commercial coaches/companies (e.g. Jason Falconer Orienteering, Josh Jenner, Carol Lovegrove, The Orienteering Company) operate privately but are not organised as a coach membership network.", "networks_count": 0}, {"rank": 12, "sport": "Wrestling", "verified": 140, "verified_display": "~140", "unverified": null, "unverified_display": "—", "status": "Verified", "status_detail": "2024/25", "association": "British Wrestling", "url": "https://britishwrestling.org/", "contact": "admin@britishwrestling.org", "software_low": 10, "software_high": 100, "software_display": "£10–£100", "revenue_low": 0, "revenue_high": 8000, "revenue_display": "£0–£8,000", "networks": [{"name": "British Shuai Jiao Union (BSJU)", "url": "https://www.shuaijiao.uk/coaching.html", "size": "Size not published", "description": "UK governing/coach pathway body for Chinese wrestling (Shuai Jiao) — coaching grades and instructor network outside British Wrestling’s Greco-Roman/freestyle remit."}], "networks_note": "No clear independent freestyle/Greco-Roman wrestling coach association found beyond British Wrestling. BMABA (martial arts umbrella) may cover some wrestling-adjacent clubs but is multi-art.", "networks_count": 1}, {"rank": 13, "sport": "Dance", "verified": null, "verified_display": "—", "unverified": 330000, "unverified_display": "~330,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "One Dance UK", "url": "https://onedanceuk.org/", "contact": "info@onedanceuk.org", "software_low": 200, "software_high": 700, "software_display": "£200–£700", "revenue_low": 15000, "revenue_high": 40000, "revenue_display": "£15,000–£40,000", "networks": [{"name": "Imperial Society of Teachers of Dancing (ISTD)", "url": "https://www.istd.org/", "size": "6,000+ members worldwide across 59 countries (ISTD)", "description": "Major independent dance teacher membership and examination board — syllabus, exams and teacher network; not One Dance UK."}, {"name": "International Dance Teachers Association (IDTA)", "url": "https://idta.co.uk/", "size": "Over 7,000 members worldwide; materials cite 7,000+ teachers in the UK", "description": "Independent dance teacher membership/examining association with UK area committees — professional body for dance teachers outside One Dance UK."}, {"name": "Royal Academy of Dance (RAD)", "url": "https://www.royalacademyofdance.org/", "size": "Size not published in sources checked (major global ballet teacher network)", "description": "Global ballet teacher membership and examination organisation with strong UK teacher base — independent awarding/membership body."}, {"name": "Professional Teachers of Dancing (PTD)", "url": "https://professionalteachersofdancing.co.uk/", "size": "Size not published", "description": "Dance teacher membership and examination board offering teaching qualifications and professional membership."}, {"name": "NCDTA International", "url": "https://www.ncdta.co.uk/", "size": "Size not published", "description": "National/international dance teachers’ association providing teacher membership and examining structures."}], "networks_note": "One Dance UK is the sector body already on the dashboard; RAD/ISTD/IDTA etc. are the large commercial/teacher networks. British Dance Council lists further awarding orgs (ADA, ABD, BATD, NATD, SDTA, UKA, WAPTD).", "networks_count": 5}, {"rank": 14, "sport": "Cricket", "verified": null, "verified_display": "—", "unverified": 210000, "unverified_display": "~210,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "ECB", "url": "https://www.ecb.co.uk/", "contact": "coach.education@ecb.co.uk", "software_low": 30, "software_high": 250, "software_display": "£30–£250", "revenue_low": 0, "revenue_high": 12000, "revenue_display": "£0–£12,000 (paid £15k–£40k)", "networks": [{"name": "Little Wickets", "url": "https://www.littlewicketsfranchise.com/", "size": "Size not published (markets itself as UK’s leading independent early-years/primary cricket coaching provider since 2011)", "description": "Children’s cricket coaching franchise — exclusive territories, training, ops support and UK HQ; independent of ECB club coach pathways."}, {"name": "Cricket Hoppers", "url": "https://crickethoppers.co.uk/franchise-opportunities/", "size": "Size not published", "description": "Kids’ cricket-class franchise network — schools, weekend classes and camps with franchisor support outside ECB."}, {"name": "TFCC Group Ltd (Tom Flowers Cricket Coaching licences)", "url": "https://www.tfccgroupltd.co.uk/", "size": "Licence network; example business works with 23+ clubs and employs multiple Level 2+ coaches (company materials)", "description": "Cricket coaching business licence model — session plans, club/school acquisition support and coach training days for independent coaching businesses."}], "networks_note": "", "networks_count": 3}, {"rank": 15, "sport": "Gymnastics", "verified": null, "verified_display": "—", "unverified": 150000, "unverified_display": "~150,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "British Gymnastics", "url": "https://www.british-gymnastics.org/", "contact": "memberservices@british-gymnastics.org", "software_low": 200, "software_high": 700, "software_display": "£200–£700", "revenue_low": 12000, "revenue_high": 28000, "revenue_display": "£12,000–£28,000", "networks": [{"name": "Tumble Tots", "url": "https://www.tumbletots.com/", "size": "~39–45 franchisees operating ~147–180 centres (company/BFA figures vary by source)", "description": "Long-running UK children’s physical-play/gymnastics-adjacent franchise (founded 1979) — franchisees deliver structured sessions for ages ~6 months–7 years independently of British Gymnastics clubs."}], "networks_note": "Many preschool multi-sport franchises include gym elements; Tumble Tots is the clearest gymnastics-rooted national franchise. No separate ‘British Gymnastics Coaches Association’ found outside BG.", "networks_count": 1}, {"rank": 16, "sport": "Rounders", "verified": null, "verified_display": "—", "unverified": 150000, "unverified_display": "~150,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "Rounders England", "url": "https://www.roundersengland.co.uk/", "contact": "enquiries@roundersengland.co.uk", "software_low": 0, "software_high": 50, "software_display": "£0–£50", "revenue_low": 0, "revenue_high": 2000, "revenue_display": "£0–£2,000", "networks": [], "networks_note": "No clear independent rounders coach association or franchise found. Multi-sport kids franchises (e.g. A-Star Sports) sometimes include rounders in curricula but are not rounders-specialist coach networks.", "networks_count": 0}, {"rank": 17, "sport": "Cycling", "verified": null, "verified_display": "—", "unverified": 120000, "unverified_display": "~120,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "British Cycling", "url": "https://www.britishcycling.org.uk/", "contact": "learning@britishcycling.org.uk", "software_low": 50, "software_high": 300, "software_display": "£50–£300", "revenue_low": 0, "revenue_high": 15000, "revenue_display": "£0–£15,000 (paid online £15k–£45k)", "networks": [{"name": "Association of British Cycling Coaches (ABCC)", "url": "https://www.abcc.co.uk/", "size": "Over 300 certified ABCC coaches in the community (prospectus/about materials)", "description": "Independent coach-run association providing its own coach education, graded awards, register, journal, conference and £10m coaching insurance — alternative to British Cycling coach pathway."}], "networks_note": "Commercial coaching academies and emerging franchise models (e.g. PowerWatts) exist but published coach counts were thin; ABCC is the main independent coach association.", "networks_count": 1}, {"rank": 18, "sport": "Yoga", "verified": null, "verified_display": "—", "unverified": 120000, "unverified_display": "~120,000 survey; 5,000+ BWY members", "status": "Not verified", "status_detail": "", "association": "British Wheel of Yoga", "url": "https://bwy.org.uk/", "contact": "office@bwy.org.uk", "software_low": 150, "software_high": 600, "software_display": "£150–£600", "revenue_low": 12000, "revenue_high": 35000, "revenue_display": "£12,000–£35,000", "networks": [{"name": "YogaPros (formerly Yoga Alliance Professionals)", "url": "https://www.theyogapros.com/", "size": "Size not published (UK-founded professional body; distinct from US Yoga Alliance)", "description": "UK professional membership/accreditation network for yoga teachers — profiles, training standards and career visibility; alternative to BWY."}, {"name": "Independent Yoga Network (IYN)", "url": "https://independentyoganetwork.org/", "size": "About 900 teachers and ~50 schools worldwide (secondary source)", "description": "UK-based accreditation and membership network for yoga teachers and schools — accepts diverse training routes; insurance benefits."}], "networks_note": "US Yoga Alliance also registers many UK teachers but is US-based; BWY remains the England/Wales NGB already excluded.", "networks_count": 2}, {"rank": 19, "sport": "Hockey", "verified": null, "verified_display": "—", "unverified": 90000, "unverified_display": "~90,000 survey; 15,000+ coaches+umpires+officials", "status": "Not verified", "status_detail": "combined workforce", "association": "England Hockey", "url": "https://www.englandhockey.co.uk/", "contact": "enquiries@englandhockey.co.uk", "software_low": 30, "software_high": 200, "software_display": "£30–£200", "revenue_low": 0, "revenue_high": 8000, "revenue_display": "£0–£8,000 (paid £5k–£25k)", "networks": [{"name": "Complete Hockey Coaching", "url": "https://www.completehockeycoaching.com/", "size": "Size not published (multi-site camps/weekly programmes)", "description": "Independent commercial hockey coaching provider — camps and weekly sessions for ages 5–18 including mini-hockey and performance pathways outside England Hockey club structures."}, {"name": "Next Generation Hockey", "url": "https://www.nextgenerationhockey.co.uk/", "size": "Size not published", "description": "Independent junior hockey camps and 1:1 coaching provider."}, {"name": "Empower Hockey", "url": "https://empowerhockey.co.uk/", "size": "Size not published", "description": "Independent school packages, holiday camps and under-18 hockey coaching business."}], "networks_note": "No national independent hockey coaches association found comparable to LCA/BACA; landscape is commercial academies rather than a membership body.", "networks_count": 3}, {"rank": 20, "sport": "Rugby union", "verified": null, "verified_display": "—", "unverified": 20000, "unverified_display": "~20,000 (RFU 2017)", "status": "Not verified", "status_detail": "outdated", "association": "RFU", "url": "https://www.englandrugby.com/", "contact": "0208 892 2000", "software_low": 20, "software_high": 200, "software_display": "£20–£200", "revenue_low": 0, "revenue_high": 10000, "revenue_display": "£0–£10,000 (paid £15k–£40k)", "networks": [{"name": "Rugby Coaches Association (RCA)", "url": "https://rugbyca.com/", "size": "Size not published (founded ~2012; rugbyca.com returned server errors when checked 2026-10-15 — existence confirmed via launch coverage / LinkedIn)", "description": "Independent not-for-profit representing professional rugby union and rugby league coaches — contracts, employment, discipline and related support; not RFU/RFL. Primary site unstable at research time; treat URL as provisional."}, {"name": "Rugbytots", "url": "https://franchise.rugbytots.co.uk/", "size": "80+ UK franchises (Jan 2026 ops commentary); other materials cite 100+ UK franchisees / ~280 global", "description": "Leading UK children’s rugby coaching franchise — exclusive territories and coach-led toddler/junior programmes independent of RFU club coach pathways."}], "networks_note": "England Rugby Coaches Association (ERCA) appears RFU-county-adjacent and is not listed as a true non-NGB alternative.", "networks_count": 2}, {"rank": 21, "sport": "Boxing", "verified": null, "verified_display": "—", "unverified": 60000, "unverified_display": "~60,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "England Boxing", "url": "https://www.englandboxing.org/", "contact": "enquiries@englandboxing.org", "software_low": 100, "software_high": 400, "software_display": "£100–£400", "revenue_low": 15000, "revenue_high": 40000, "revenue_display": "£15,000–£40,000", "networks": [{"name": "ABA-UK", "url": "https://www.aba-uk.org/", "size": "Size not published", "description": "Alternative UK amateur boxing association for clubs, boxers, coaches and officials — membership pathway with DBS/safeguarding/first-aid requirements outside England Boxing."}, {"name": "British Martial Arts & Boxing Association (BMABA)", "url": "https://bmaba.org.uk/", "size": "Size not published", "description": "Umbrella association supporting independent martial-arts and boxing clubs/instructors — affiliation, insurance and safeguarding tools outside recognised NGBs."}, {"name": "UBX", "url": "https://ownaubx.com/gb", "size": "Nine established UK sites (London, Sheffield, Bath cited); UK/Ireland master franchise expanding", "description": "Boutique boxing and strength gym franchise network employing coaches/instructors commercially outside England Boxing club structures."}, {"name": "British Boxing Board of Control (BBBofC)", "url": "https://bbbofc.com/", "size": "Size not published (professional boxing regulator)", "description": "Professional boxing licensing/regulatory body for pro boxers, trainers and seconds — distinct from England Boxing (amateur NGB)."}], "networks_note": "", "networks_count": 4}, {"rank": 22, "sport": "Volleyball", "verified": null, "verified_display": "—", "unverified": 60000, "unverified_display": "~60,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "Volleyball England", "url": "https://www.volleyballengland.org/", "contact": "info@volleyballengland.org", "software_low": 20, "software_high": 150, "software_display": "£20–£150", "revenue_low": 0, "revenue_high": 6000, "revenue_display": "£0–£6,000", "networks": [], "networks_note": "No clear independent volleyball coach association or specialist franchise found beyond Volleyball England. Multi-sport kids franchises occasionally include volleyball but are not volleyball coach networks.", "networks_count": 0}, {"rank": 23, "sport": "Sailing", "verified": null, "verified_display": "—", "unverified": 60000, "unverified_display": "~60,000 (UK Coaching 2019)", "status": "Not verified", "status_detail": "", "association": "RYA", "url": "https://www.rya.org.uk/", "contact": "training@rya.org.uk", "software_low": 50, "software_high": 250, "software_display": "£50–£250", "revenue_low": 15000, "revenue_high": 35000, "revenue_display": "£15,000–£35,000", "networks": [{"name": "Association of Sail Training Organisations (ASTO)", "url": "https://asto.org.uk/", "size": "Size not published (UK sail-training vessel/operator umbrella)", "description": "Umbrella body promoting UK sail training organisations and vessels — organises operators/instructors in the sail-training sector; works with RYA schemes but is not the RYA."}, {"name": "International Sailing Schools Association (ISSA)", "url": "https://issa.global/", "size": "Size not published (global accredited-school/instructor network)", "description": "Global independent sailing-school and instructor licensing network — alternative international pathway used by some UK schools alongside or instead of RYA."}], "networks_note": "Most UK dinghy/yacht instructor pathways remain RYA-dominated; true large independent UK coach associations are scarce.", "networks_count": 2}, {"rank": 24, "sport": "Canoeing / paddlesport", "verified": null, "verified_display": "—", "unverified": 10500, "unverified_display": "~10,500 (BC 2017)", "status": "Not verified", "status_detail": "2017 stock", "association": "Paddle UK", "url": "https://paddleuk.org.uk/", "contact": "0300 0119 500", "software_low": 50, "software_high": 250, "software_display": "£50–£250", "revenue_low": 15000, "revenue_high": 30000, "revenue_display": "£15,000–£30,000", "networks": [{"name": "British Stand Up Paddle Association (BSUPA)", "url": "https://www.bsupa.org.uk/", "size": "Size not published", "description": "Independent volunteer-run UK SUP association offering training/coaching schemes and member insurance outside Paddle UK canoe/kayak pathways."}, {"name": "British Outdoor Professionals Association (BOPA)", "url": "https://bopa-sport.co.uk/", "size": "Size not published", "description": "Independent not-for-profit for outdoor-sport professionals including canoeing instructors — training, assessment, employment and safety information."}], "networks_note": "Historic Association of Paddlers/Coaches existed as a peer network of Level 5 coaches; current public footprint is limited.", "networks_count": 2}, {"rank": 25, "sport": "Netball", "verified": null, "verified_display": "—", "unverified": 28000, "unverified_display": "~28,000 (EN 2024)", "status": "Not verified", "status_detail": "", "association": "England Netball", "url": "https://www.englandnetball.co.uk/", "contact": "coaching@englandnetball.co.uk", "software_low": 20, "software_high": 200, "software_display": "£20–£200", "revenue_low": 0, "revenue_high": 8000, "revenue_display": "£0–£8,000 (paid £5k–£25k)", "networks": [{"name": "Mighty Netball", "url": "https://mightynetball.co.uk/work-with-us/franchise-opportunities/", "size": "Size not published", "description": "Children’s netball coaching franchise — branded programmes and local territories independent of England Netball club pathways."}, {"name": "Pivotal Netball", "url": "https://pivotalnetball.com/franchise/", "size": "Size not published", "description": "Netball coaching franchise with training, equipment, CRM and multi-year franchise agreement."}, {"name": "Netball Kids", "url": "https://netballkids.co.uk/franchising/", "size": "Size not published (markets as No.1 kids’ netball franchise in UK)", "description": "Kids’ netball franchise network for coaches/operators delivering junior programmes."}, {"name": "You Play Netball", "url": "https://www.youplaynetball.co.uk/franchise/interest", "size": "Size not published", "description": "Netball franchise opportunity for coaches/operators building local programmes."}, {"name": "Netball Stars", "url": "https://franchises4sale.co.uk/franchise/netball-stars", "size": "Size not published", "description": "Children’s netball franchise listed on franchise marketplaces — local coaching business model."}], "networks_note": "", "networks_count": 5}, {"rank": 26, "sport": "Rugby league", "verified": null, "verified_display": "—", "unverified": 3108, "unverified_display": "3,108 (RFL 2022)", "status": "Not verified", "status_detail": "", "association": "RFL", "url": "https://www.rugby-league.com/", "contact": "Coursebookings@rfl.co.uk", "software_low": 20, "software_high": 200, "software_display": "£20–£200", "revenue_low": 0, "revenue_high": 10000, "revenue_display": "£0–£10,000 (paid £10k–£35k)", "networks": [{"name": "Rugby Coaches Association (RCA)", "url": "https://rugbyca.com/", "size": "Size not published (founded ~2012; rugbyca.com returned server errors when checked 2026-10-15 — existence confirmed via launch coverage / LinkedIn)", "description": "Independent not-for-profit representing professional rugby union and rugby league coaches — contracts, employment, discipline and related support; not RFU/RFL. Primary site unstable at research time; treat URL as provisional."}, {"name": "Rugbytots", "url": "https://franchise.rugbytots.co.uk/", "size": "80+ UK franchises (see Rugby union entry)", "description": "Children’s rugby franchise whose curriculum is code-agnostic at early ages; franchisees often sit outside RFL club coach pathways."}], "networks_note": "Club-specific networks (e.g. Hull KR Robins Coaching Network) are NGB-club adjacent and not listed.", "networks_count": 2}, {"rank": 27, "sport": "Badminton", "verified": null, "verified_display": "—", "unverified": 1168, "unverified_display": "~1,168 (BE 2025)", "status": "Not verified", "status_detail": "", "association": "Badminton England", "url": "https://www.badmintonengland.co.uk/", "contact": "01908 268400", "software_low": 20, "software_high": 150, "software_display": "£20–£150", "revenue_low": 0, "revenue_high": 10000, "revenue_display": "£0–£10,000 (paid £8k–£25k)", "networks": [{"name": "Racquet Buddies", "url": "https://racquetbuddies.co.uk/franchise/", "size": "Size not published (nationwide kids’ badminton/racket franchise launched by Badminton International)", "description": "Children’s badminton and racket-skills franchise — training, manuals, equipment and franchisee support outside Badminton England club pathways."}], "networks_note": "", "networks_count": 1}, {"rank": 28, "sport": "Squash", "verified": null, "verified_display": "—", "unverified": 1000, "unverified_display": "1,000+ (ES Coaches’ Club)", "status": "Not verified", "status_detail": "", "association": "England Squash", "url": "https://www.englandsquash.com/", "contact": "coaching@englandsquash.com", "software_low": 100, "software_high": 400, "software_display": "£100–£400", "revenue_low": 20000, "revenue_high": 45000, "revenue_display": "£20,000–£45,000", "networks": [{"name": "Courter", "url": "https://www.courter.co.uk/", "size": "Size not published", "description": "Independent online marketplace for booking squash coaches (including female-coach discovery) — commercial discovery/booking platform, not England Squash."}], "networks_note": "England Squash Coaches Club is NGB-run and excluded. No large independent squash coaches association found.", "networks_count": 1}, {"rank": 29, "sport": "Table tennis", "verified": null, "verified_display": "—", "unverified": 600, "unverified_display": "600+ (TTE licence scheme)", "status": "Not verified", "status_detail": "", "association": "Table Tennis England", "url": "https://www.tabletennisengland.co.uk/", "contact": "coaching@tabletennisengland.co.uk", "software_low": 20, "software_high": 150, "software_display": "£20–£150", "revenue_low": 0, "revenue_high": 8000, "revenue_display": "£0–£8,000 (paid £5k–£20k)", "networks": [{"name": "Dream Pong", "url": "https://www.dreampong.com/partner-with-us", "size": "Size not published", "description": "Commercial table-tennis club/partner model offering coaching systems, branding and operations support for operators outside TTE club defaults."}], "networks_note": "No British Table Tennis Coaches Association found. PingPod is primarily US-franchised with limited UK footprint.", "networks_count": 1}, {"rank": 30, "sport": "Fencing", "verified": null, "verified_display": "—", "unverified": 270, "unverified_display": "270+ (BF 2021)", "status": "Not verified", "status_detail": "outdated register count", "association": "British Fencing", "url": "https://www.britishfencing.com/", "contact": "workforce@britishfencing.com", "software_low": 50, "software_high": 300, "software_display": "£50–£300", "revenue_low": 5000, "revenue_high": 25000, "revenue_display": "£5,000–£25,000", "networks": [{"name": "Little Musketeers / Musketeers Education", "url": "https://www.littlemusketeers.com/", "size": "Size not published", "description": "Primary-school fencing programme and coaching-team/licensing opportunity — curriculum and Curtanna coaching platform for coaches delivering kids’ fencing outside British Fencing club pathways."}], "networks_note": "", "networks_count": 1}, {"rank": 31, "sport": "Judo", "verified": null, "verified_display": "—", "unverified": 30000, "unverified_display": "~30,000 (UK Coaching 2019 only)", "status": "Not verified", "status_detail": "register exists, no total", "association": "British Judo", "url": "https://www.britishjudo.org.uk/", "contact": "coaching@britishjudo.org.uk", "software_low": 50, "software_high": 300, "software_display": "£50–£300", "revenue_low": 5000, "revenue_high": 25000, "revenue_display": "£5,000–£25,000", "networks": [{"name": "British Judo Council (BJC)", "url": "https://britishjudocouncil.org/", "size": "Size not published (long-standing autonomous judo organisation with own clubs/instructors)", "description": "Autonomous traditional judo organisation with its own affiliation, instructors and coaching/teaching approvals — parallel pathway to British Judo Association clubs."}, {"name": "Judo For All UK", "url": "https://www.judoforall.org.uk/", "size": "Size not published", "description": "Traditional judo organisation supporting instructor development and clubs outside/alongside mainstream BJA pathways."}, {"name": "BMABA", "url": "https://bmaba.org.uk/", "size": "Size not published", "description": "Multi-art association supporting independently run martial-arts clubs including judo — insurance and instructor affiliation outside British Judo."}], "networks_note": "", "networks_count": 3}];
+DATA.forEach(r => {
+  r.software_mid = (Number(r.software_low) + Number(r.software_high)) / 2;
+  r.revenue_mid = (Number(r.revenue_low) + Number(r.revenue_high)) / 2;
+});
+
+let sortKey = 'rank';
+let sortDir = 1;
+let filtered = [...DATA];
+const openSet = new Set();
+
+const tbody = document.getElementById('tbody');
+const q = document.getElementById('q');
+const status = document.getElementById('status');
+const netfilter = document.getElementById('netfilter');
+const shown = document.getElementById('shown');
+
+document.getElementById('statSports').textContent = DATA.length;
+document.getElementById('statVerified').textContent = DATA.filter(d => d.status === 'Verified').length;
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function apply() {
+  const term = q.value.trim().toLowerCase();
+  const st = status.value;
+  const nf = netfilter.value;
+  filtered = DATA.filter(r => {
+    if (st !== 'all' && r.status !== st) return false;
+    if (nf === 'has' && !(r.networks_count > 0)) return false;
+    if (nf === 'none' && r.networks_count > 0) return false;
+    if (!term) return true;
+    const netHay = (r.networks || []).map(n => [n.name, n.description, n.size].join(' ')).join(' ');
+    const hay = [r.sport, r.association, r.contact, r.status, r.status_detail, r.verified_display, r.unverified_display, r.software_display, r.revenue_display, netHay].join(' ').toLowerCase();
+    return hay.includes(term);
+  });
+  filtered.sort((a,b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return (av - bv) * sortDir;
+  });
+  render();
+}
+
+function networkBlock(r) {
+  if (!r.networks || !r.networks.length) {
+    return `<div class="empty">${esc(r.networks_note || 'No clear independent coach network found beyond the NGB.')}</div>`;
+  }
+  const items = r.networks.map(n => `
+    <div class="net">
+      <div class="name"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.name)}</a></div>
+      <div class="meta">${esc(n.size || 'Size not published')}</div>
+      <div class="desc">${esc(n.description)}</div>
+    </div>`).join('');
+  const note = r.networks_note ? `<p class="empty" style="margin-top:8px">${esc(r.networks_note)}</p>` : '';
+  return `<h4>Independent coach networks (outside ${esc(r.association)})</h4>${items}${note}`;
+}
+
+function render() {
+  shown.textContent = `Showing ${filtered.length} of ${DATA.length}`;
+  tbody.innerHTML = filtered.map(r => {
+    const pill = r.status === 'Verified' ? 'v' : 'nv';
+    const detail = r.status_detail ? ` <span class="muted">(${esc(r.status_detail)})</span>` : '';
+    const contact = String(r.contact).includes('@')
+      ? `<a href="mailto:${esc(r.contact)}">${esc(r.contact)}</a>`
+      : esc(r.contact);
+    const isOpen = openSet.has(r.sport);
+    const main = `<tr class="main" data-sport="${esc(r.sport)}">
+      <td class="num sticky-1">${r.rank}</td>
+      <td class="sticky-2"><strong>${esc(r.sport)}</strong></td>
+      <td class="num">${esc(r.verified_display)}</td>
+      <td class="num">${esc(r.unverified_display)}</td>
+      <td class="num money"><strong>${esc(r.software_display)}</strong></td>
+      <td class="num money"><strong>${esc(r.revenue_display)}</strong></td>
+      <td><button type="button" class="toggle ${isOpen ? 'open' : ''}" data-sport="${esc(r.sport)}">${r.networks_count} ▾</button></td>
+      <td><span class="pill ${pill}">${esc(r.status)}</span>${detail}</td>
+      <td><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.association)}</a></td>
+      <td>${contact}</td>
+    </tr>`;
+    const detailRow = isOpen ? `<tr class="detail" data-sport="${esc(r.sport)}"><td colspan="10"><div class="detail-inner">${networkBlock(r)}</div></td></tr>` : '';
+    return main + detailRow;
+  }).join('');
+
+  tbody.querySelectorAll('button.toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const s = btn.dataset.sport;
+      if (openSet.has(s)) openSet.delete(s); else openSet.add(s);
+      render();
+    });
+  });
+}
+
+document.querySelectorAll('th[data-key]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+    document.querySelectorAll('th').forEach(h => { h.classList.remove('active'); const a=h.querySelector('.arrow'); if(a) a.textContent='↕'; });
+    th.classList.add('active');
+    th.querySelector('.arrow').textContent = sortDir === 1 ? '↑' : '↓';
+    apply();
+  });
+});
+
+q.addEventListener('input', apply);
+status.addEventListener('change', apply);
+netfilter.addEventListener('change', apply);
+document.getElementById('expandAll').addEventListener('click', () => {
+  filtered.forEach(r => openSet.add(r.sport));
+  render();
+});
+document.getElementById('collapseAll').addEventListener('click', () => {
+  openSet.clear();
+  render();
+});
+document.getElementById('reset').addEventListener('click', () => {
+  q.value=''; status.value='all'; netfilter.value='all'; sortKey='rank'; sortDir=1; openSet.clear();
+  document.querySelectorAll('th').forEach(h => { h.classList.remove('active'); const a=h.querySelector('.arrow'); if(a) a.textContent='↕'; });
+  apply();
+});
+
+apply();
+
+const playBtn = document.getElementById('playGuide');
+const playIcon = document.getElementById('playGuideIcon');
+const playLabel = document.getElementById('playGuideLabel');
+const stopBtn = document.getElementById('stopGuide');
+const guideAudio = document.getElementById('guideAudio');
+const tourCaption = document.getElementById('tourCaption');
+const tourStepLabel = document.getElementById('tourStepLabel');
+const tourCaptionText = document.getElementById('tourCaptionText');
+
+const TOUR_STEPS = [
+  { start: 0.05, end: 15.15, targets: ['tourTable'], cols: ['association','contact'], caption: 'Alex — each sport’s top association and contact details are in the table, so you can reach the organisations that run coaching.', label: 'Contacts for Alex' },
+  { start: 15.15, end: 42.19, targets: ['tourTable'], caption: 'One sport per row. Sort with any column header; reverse by clicking again.', label: 'Sports table' },
+  { start: 42.19, end: 58.38, targets: ['tourTable'], cols: ['verified','unverified'], caption: 'Verified = NGB licence stock. Unverified = survey or membership proxies — directional estimates.', label: 'Verified vs Unverified' },
+  { start: 58.38, end: 67.03, targets: ['tourTable'], cols: ['software_mid','revenue_mid'], caption: 'Modelled software spend and average revenue per coach for market sizing.', label: 'Revenue & software' },
+  { start: 67.03, end: 80.07, targets: ['tourTable'], cols: ['networks_count'], expandDemo: true, caption: 'Independent coach groups outside the NGB. Select a count to expand details.', label: 'Networks' },
+  { start: 80.07, end: 84.52, targets: ['tourControls'], controls: ['expand','collapse'], caption: 'Expand all / Collapse all opens or closes every network list.', label: 'Expand / Collapse' },
+  { start: 84.52, end: 94.78, targets: ['tourControls'], controls: ['search','status','netfilter','reset'], caption: 'Search and filter by status or network presence; Reset clears filters.', label: 'Filters & search' },
+  { start: 94.78, end: 109.12, targets: ['tourHeader','tourStats'], caption: 'Start with association and contact for introductions; use the rest to size opportunity. Local only.', label: 'Purpose' }
+];
+
+let tourStepIdx = -1;
+let tourExpandedDemo = false;
+
+function setGuideUi(playing) {
+  playBtn.classList.toggle('playing', playing);
+  playIcon.textContent = playing ? '❚❚' : '▶';
+  playLabel.textContent = playing ? 'Pause audio guide' : 'Play audio guide';
+}
+
+function setStopVisible(on) {
+  stopBtn.classList.toggle('visible', !!on);
+}
+
+function clearTourVisuals() {
+  document.body.classList.remove('tour-active');
+  document.querySelectorAll('.tour-spotlight').forEach(el => el.classList.remove('tour-spotlight'));
+  document.querySelectorAll('.tour-col-hot').forEach(el => el.classList.remove('tour-col-hot'));
+  document.querySelectorAll('.tour-ctrl-hot').forEach(el => {
+    el.classList.remove('tour-ctrl-hot');
+    el.style.outline = '';
+    el.style.outlineOffset = '';
+  });
+  tourCaptionText.textContent = '';
+  tourStepLabel.textContent = '';
+  tourStepIdx = -1;
+}
+
+function endTourDemoExpand() {
+  if (!tourExpandedDemo) return;
+  if (window.__tourDemoSport) {
+    openSet.delete(window.__tourDemoSport);
+    window.__tourDemoSport = null;
+    render();
+  }
+  tourExpandedDemo = false;
+}
+
+function maybeExpandDemo() {
+  if (tourExpandedDemo) return;
+  const row = DATA.find(r => (r.networks_count || 0) > 0);
+  if (!row) return;
+  window.__tourDemoSport = row.sport;
+  openSet.add(row.sport);
+  tourExpandedDemo = true;
+  render();
+  // re-apply current step after table rebuild
+  if (tourStepIdx >= 0) applyTourStep(TOUR_STEPS[tourStepIdx], tourStepIdx);
+}
+
+function applyTourStep(step, idx) {
+  document.body.classList.add('tour-active');
+  document.querySelectorAll('.tour-spotlight').forEach(el => el.classList.remove('tour-spotlight'));
+  document.querySelectorAll('.tour-col-hot').forEach(el => el.classList.remove('tour-col-hot'));
+  document.querySelectorAll('.tour-ctrl-hot').forEach(el => {
+    el.classList.remove('tour-ctrl-hot');
+    el.style.outline = '';
+    el.style.outlineOffset = '';
+  });
+  (step.targets || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('tour-spotlight');
+  });
+  if (step.cols && step.cols.length) {
+    const ths = document.querySelectorAll('thead th');
+    ths.forEach(th => {
+      if (step.cols.includes(th.dataset.key)) {
+        th.classList.add('tour-col-hot');
+        const colIdx = [...ths].indexOf(th);
+        document.querySelectorAll('tbody tr.main').forEach(tr => {
+          const td = tr.children[colIdx];
+          if (td) td.classList.add('tour-col-hot');
+        });
+      }
+    });
+  }
+  if (step.controls && step.controls.length) {
+    step.controls.forEach(key => {
+      const el = document.querySelector(`[data-tour="${key}"]`);
+      if (el) {
+        el.classList.add('tour-ctrl-hot');
+        el.style.outline = '2px solid rgba(91,140,255,.9)';
+        el.style.outlineOffset = '3px';
+      }
+    });
+  }
+  if (step.expandDemo) maybeExpandDemo();
+  else endTourDemoExpand();
+  tourStepLabel.textContent = `Guide · ${idx + 1} / ${TOUR_STEPS.length} · ${step.label}`;
+  tourCaptionText.innerHTML = step.caption;
+  const spotlight = document.querySelector('.tour-spotlight');
+  if (spotlight) spotlight.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function syncTourToAudio() {
+  if (guideAudio.paused && guideAudio.currentTime === 0) return;
+  const t = guideAudio.currentTime;
+  let idx = TOUR_STEPS.findIndex(s => t >= s.start && t < s.end);
+  if (idx < 0) {
+    if (t >= TOUR_STEPS[TOUR_STEPS.length - 1].start) idx = TOUR_STEPS.length - 1;
+    else return;
+  }
+  if (idx !== tourStepIdx) {
+    tourStepIdx = idx;
+    applyTourStep(TOUR_STEPS[idx], idx);
+  }
+}
+
+let tourStopping = false;
+function stopTour() {
+  // Full cancel → pristine unused walkthrough (next Play = first-time launch)
+  tourStopping = true;
+  try { guideAudio.pause(); } catch (e) {}
+  try { guideAudio.currentTime = 0; } catch (e) {}
+  tourStepIdx = -1;
+  setGuideUi(false);
+  setStopVisible(false);
+  clearTourVisuals();
+  // collapse only the row the tour demo opened
+  if (window.__tourDemoSport && typeof openSet !== 'undefined') {
+    openSet.delete(window.__tourDemoSport);
+    window.__tourDemoSport = null;
+    tourExpandedDemo = false;
+    if (typeof render === 'function') render();
+  } else {
+    tourExpandedDemo = false;
+    window.__tourDemoSport = null;
+  }
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+  tourStopping = false;
+}
+
+playBtn.addEventListener('click', async () => {
+  try {
+    if (guideAudio.paused) {
+      // If we were fully stopped (time at 0), ensure tour state is clean before first step
+      if (guideAudio.currentTime < 0.05) {
+        tourStepIdx = -1;
+        clearTourVisuals();
+      }
+      await guideAudio.play();
+      setGuideUi(true);
+      setStopVisible(true);
+      syncTourToAudio();
+    } else {
+      // Pause only — keep visuals; use Stop to reset to pristine
+      guideAudio.pause();
+      setGuideUi(false);
+      setStopVisible(true);
+    }
+  } catch (err) {
+    playLabel.textContent = 'Audio missing — keep MP3 beside this HTML';
+    console.error(err);
+    stopTour();
+  }
+});
+stopBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  stopTour();
+});
+guideAudio.addEventListener('timeupdate', syncTourToAudio);
+guideAudio.addEventListener('seeked', syncTourToAudio);
+guideAudio.addEventListener('ended', () => stopTour());
+guideAudio.addEventListener('play', () => { setGuideUi(true); setStopVisible(true); syncTourToAudio(); });
+guideAudio.addEventListener('pause', () => {
+  if (tourStopping) return; // stopTour owns the reset
+  if (guideAudio.ended) {
+    stopTour();
+    return;
+  }
+  // User hit Pause mid-tour — keep highlights; Stop still available for full reset
+  setGuideUi(false);
+  setStopVisible(true);
+});
+
+
+function csvEscape(v) {
+  const s = v == null ? '' : String(v);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+function downloadText(filename, text, mime) {
+  const blob = new Blob([text], { type: mime || 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+function exportDashboardCsv() {
+  const sportHeaders = ['Rank','Sport','Verified','Unverified','Est. software £ / yr','Avg revenue / coach £','Networks count','Status','Status detail','Association (NGB)','NGB URL','Contact','Network names'];
+  const sportRows = DATA.map(r => [
+    r.rank, r.sport, r.verified_display, r.unverified_display, r.software_display, r.revenue_display,
+    r.networks_count, r.status, r.status_detail || '', r.association, r.url || '', r.contact || '',
+    (r.networks || []).map(n => n.name).join('; ')
+  ]);
+  const sportsCsv = [sportHeaders, ...sportRows].map(row => row.map(csvEscape).join(',')).join('\n');
+
+  const netHeaders = ['Sport','Network name','Network URL','Size','Description'];
+  const netRows = [];
+  DATA.forEach(r => {
+    (r.networks || []).forEach(n => {
+      netRows.push([r.sport, n.name, n.url || '', n.size || '', n.description || '']);
+    });
+  });
+  const netsCsv = [netHeaders, ...netRows].map(row => row.map(csvEscape).join(',')).join('\n');
+
+  // Two downloads: sports snapshot + networks detail (usable for a friend)
+  downloadText('uk-coaches-sports-2026-10-15.csv', '\uFEFF' + sportsCsv);
+  setTimeout(() => downloadText('uk-coaches-networks-2026-10-15.csv', '\uFEFF' + netsCsv), 400);
+}
+document.getElementById('exportData').addEventListener('click', exportDashboardCsv);
+
+</script>
+</body>
+</html>
